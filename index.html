@@ -3,16 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Analisador Léxico — Dicionário com Reaproveitamento de Regras</title>
+  <title>Analisador Léxico</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Analisador Léxico com Dicionário e Reaproveitamento de Regras</h1>
+    <h1>Analisador Léxico </h1>
+    <p style="display: flex; justify-content: center;">Gabriel Brunetto E Eduardo Ongaratto</p>
 
     <div>
       <input type="text" id="wordInput" placeholder="Digite uma palavra para adicionar ao dicionário" />
       <button id="addBtn">Adicionar</button>
+    </div>
+
+    <div class="word-dictionary">
+      <h3>Dicionário de Palavras</h3>
+      <ul id="wordList"></ul>
     </div>
 
     <div>
@@ -20,7 +26,7 @@
       <button id="checkBtn">Consultar</button>
     </div>
 
-    <h3>Matriz de Transição (Autômato Reutilizável)</h3>
+    <h3>Matriz de Transição</h3>
     <table id="stateTable">
       <thead>
         <tr><th>Estado</th><th>Entrada</th><th>Próximo Estado</th></tr>
