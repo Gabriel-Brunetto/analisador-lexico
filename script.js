@@ -147,9 +147,9 @@ function simulate(word){
       rows.forEach(r => r.classList.remove('highlight'));
       
       if(matrix[current] && matrix[current]['fim'] === 'qf'){
-        output(`✅ Palavra '${word}' RECONHECIDA! Está no dicionário.`);
+        output(`✅ Palavra '${word}' foi reconhecida! Está no dicionário.`);
       } else {
-        output(`❌ Palavra '${word}' NÃO RECONHECIDA. Não está no dicionário.`);
+        output(`❌ Palavra '${word}' não foi reconhecida. Não está no dicionário.`);
       }
       return;
     }
