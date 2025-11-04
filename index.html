@@ -1,42 +1,56 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Analisador Léxico</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Analisador Léxico </h1>
-    <p style="display: flex; justify-content: center;">Gabriel Brunetto E Eduardo Ongaratto</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Analisador Léxico</title>
+    <link rel="stylesheet" href="style/main.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Analisador Léxico</h1>
+      <p style="display: flex; justify-content: center">
+        Gabriel Brunetto E Eduardo Ongaratto
+      </p>
 
-    <div>
-      <input type="text" id="wordInput" placeholder="Digite uma palavra para adicionar ao dicionário" />
-      <button id="addBtn">Adicionar</button>
+      <div>
+        <input
+          type="text"
+          id="wordInput"
+          placeholder="Digite uma palavra para adicionar ao dicionário"
+        />
+        <button id="addBtn">Adicionar</button>
+      </div>
+
+      <div class="word-dictionary">
+        <h3>Dicionário de Palavras</h3>
+        <ul id="wordList"></ul>
+      </div>
+
+      <div>
+        <input
+          type="text"
+          id="checkInput"
+          placeholder="Digite uma palavra para consultar"
+        />
+        <button id="checkBtn">Consultar</button>
+      </div>
+
+      <h3>Matriz de Transição</h3>
+      <table id="stateTable">
+        <thead>
+          <tr>
+            <th>Estado</th>
+            <th>Entrada</th>
+            <th>Próximo Estado</th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+
+      <div id="output"></div>
     </div>
 
-    <div class="word-dictionary">
-      <h3>Dicionário de Palavras</h3>
-      <ul id="wordList"></ul>
-    </div>
-
-    <div>
-      <input type="text" id="checkInput" placeholder="Digite uma palavra para consultar" />
-      <button id="checkBtn">Consultar</button>
-    </div>
-
-    <h3>Matriz de Transição</h3>
-    <table id="stateTable">
-      <thead>
-        <tr><th>Estado</th><th>Entrada</th><th>Próximo Estado</th></tr>
-      </thead>
-      <tbody id="matrixBody"></tbody>
-    </table>
-
-    <div id="output"></div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
