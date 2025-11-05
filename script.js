@@ -1,220 +1,280 @@
-let dictionary = [];
-let matrix = { q0: {} };
-let stateCount = 0;
+let listaDePalavras = [];
+let matrizDeTransicao = { q0: {} };
+let contadorDeEstados = 0;
 
-const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const ALFABETO = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const TEMPO_ANIMACAO = 500;
 
-// Adiciona palavra ao dicionário
-function addWordToDictionary(word){
-  if(!/^[a-z]+$/.test(word)){
-    output(`❌ Palavra inválida: ${word}`);
+function palavraEhValida(palavra) {
+  const regexApenasLetrasMinusculas = /^[a-z]+$/;
+  return regexApenasLetrasMinusculas.test(palavra);
+}
+
+function palavraJaExisteNoDicionario(palavra) {
+  return listaDePalavras.includes(palavra);
+}
+
+function adicionarPalavraAoDicionario(palavra) {
+  if (!palavraEhValida(palavra)) {
+    mostrarMensagem(`❌ Palavra inválida: ${palavra}`, 'erro');
     return;
   }
-  if(!dictionary.includes(word)){
-    dictionary.push(word);
-    output(`✅ Palavra '${word}' adicionada ao dicionário.`);
-    addWordToMatrix(word);
-    renderMatrix();
-    renderDictionary();
-  } else {
-    output(`⚠️ '${word}' já está no dicionário.`);
-  }
-}
 
-// Renderiza a lista de palavras do dicionário
-function renderDictionary(){
-  const list = document.getElementById('wordList');
-  list.innerHTML = '';
-  
-  if(dictionary.length === 0){
-    list.innerHTML = '<li style="text-align:center; color:#999;">Nenhuma palavra adicionada</li>';
+  if (palavraJaExisteNoDicionario(palavra)) {
+    mostrarMensagem(`⚠️ '${palavra}' já está no dicionário.`, 'aviso');
     return;
   }
-  
-  dictionary.forEach((word, idx) => {
-    const item = document.createElement('li');
-    item.innerHTML = `
-      <span style="color: black;"><strong>${idx + 1}.</strong> ${word}</span>
-      <button onclick="removeWord('${word}')" class="remove-btn">Remover</button>
-    `;
-    list.appendChild(item);
-  });
+
+  listaDePalavras.push(palavra);
+  mostrarMensagem(`✅ Palavra '${palavra}' adicionada ao dicionário.`, 'sucesso');
+
+  adicionarPalavraNoAutomato(palavra);
+  atualizarTabelaDeTransicoes();
+  atualizarListaDePalavras();
 }
 
-// Remove palavra do dicionário
-function removeWord(word){
-  const index = dictionary.indexOf(word);
-  if(index > -1){
-    dictionary.splice(index, 1);
-    output(`🗑️ Palavra '${word}' removida do dicionário.`);
-    rebuildMatrix();
-    renderDictionary();
+function removerPalavraDoDicionario(palavra) {
+  const posicaoDaPalavra = listaDePalavras.indexOf(palavra);
+
+  if (posicaoDaPalavra > -1) {
+    listaDePalavras.splice(posicaoDaPalavra, 1);
+    mostrarMensagem(`🗑️ Palavra '${palavra}' removida do dicionário.`, 'info');
+
+    reconstruirAutomatoCompleto();
+    atualizarListaDePalavras();
   }
 }
 
-// Reconstrói a matriz do zero com as palavras restantes
-function rebuildMatrix(){
-  matrix = { q0: {} };
-  stateCount = 0;
-  dictionary.forEach(word => addWordToMatrix(word));
-  renderMatrix();
-}
+function adicionarPalavraNoAutomato(palavra) {
+  let estadoAtual = 'q0';
 
-// Adiciona palavra à matriz de transição (reaproveita prefixos)
-function addWordToMatrix(word){
-  let current = 'q0';
-  for(const symbol of word){
-    if(!matrix[current]) matrix[current] = {};
-    if(!matrix[current][symbol]){
-      stateCount++;
-      const nextState = 'q' + stateCount;
-      matrix[current][symbol] = nextState;
-      matrix[nextState] = {};
+  for (const letra of palavra) {
+    if (!matrizDeTransicao[estadoAtual]) {
+      matrizDeTransicao[estadoAtual] = {};
     }
-    current = matrix[current][symbol];
-  }
-  // Marca estado final
-  matrix[current]['fim'] = 'qf';
-}
 
-// Renderiza a matriz de transição na tabela
-function renderMatrix(){
-  const tbody = document.getElementById('matrixBody');
-  tbody.innerHTML = '';
-  
-  for(const state in matrix){
-    for(const symbol in matrix[state]){
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${state}</td><td>${symbol}</td><td>${matrix[state][symbol]}</td>`;
-      tbody.appendChild(row);
-    }
-  }
-}
-
-// Exibe mensagem de saída
-function output(msg){
-  const out = document.getElementById('output');
-  out.textContent = msg;
-  out.style.padding = '15px';
-  out.style.marginTop = '20px';
-  out.style.borderRadius = '4px';
-  
-  if(msg.includes('✅')){
-    out.style.background = '#d4edda';
-    out.style.color = '#155724';
-    out.style.border = '1px solid #c3e6cb';
-  } else if(msg.includes('❌')){
-    out.style.background = '#f8d7da';
-    out.style.color = '#721c24';
-    out.style.border = '1px solid #f5c6cb';
-  } else if(msg.includes('⚠️')){
-    out.style.background = '#fff3cd';
-    out.style.color = '#856404';
-    out.style.border = '1px solid #ffeaa7';
-  } else if(msg.includes('🗑️')){
-    out.style.background = '#e2e3e5';
-    out.style.color = '#383d41';
-    out.style.border = '1px solid #d6d8db';
-  } else {
-    out.style.background = '#d1ecf1';
-    out.style.color = '#0c5460';
-    out.style.border = '1px solid #bee5eb';
-  }
-}
-
-// Simula o reconhecimento de uma palavra
-function simulate(word){
-  if(!/^[a-z]+$/.test(word)){
-    output(`❌ Palavra '${word}' inválida. Use apenas letras minúsculas (a-z).`);
-    return;
-  }
-  
-  if(dictionary.length === 0){
-    output(`⚠️ Adicione palavras ao dicionário antes de consultar.`);
-    return;
-  }
-  
-  let current = 'q0';
-  const tbody = document.getElementById('matrixBody');
-  const rows = [...tbody.querySelectorAll('tr')];
-  
-  output(`🔍 Simulando reconhecimento de '${word}'...`);
-  
-  let index = 0;
-  const interval = setInterval(() => {
-    if(index >= word.length){
-      clearInterval(interval);
-      rows.forEach(r => r.classList.remove('highlight'));
+    if (!matrizDeTransicao[estadoAtual][letra]) {
+      contadorDeEstados++;
+      const proximoEstado = 'q' + contadorDeEstados;
       
-      if(matrix[current] && matrix[current]['fim'] === 'qf'){
-        output(`✅ Palavra '${word}' foi reconhecida! Está no dicionário.`);
+      matrizDeTransicao[estadoAtual][letra] = proximoEstado;
+      matrizDeTransicao[proximoEstado] = {};
+    }
+
+    estadoAtual = matrizDeTransicao[estadoAtual][letra];
+  }
+
+  matrizDeTransicao[estadoAtual]['fim'] = 'qf';
+}
+
+function reconstruirAutomatoCompleto() {
+  matrizDeTransicao = { q0: {} };
+  contadorDeEstados = 0;
+
+  listaDePalavras.forEach(palavra => {
+    adicionarPalavraNoAutomato(palavra);
+  });
+
+  atualizarTabelaDeTransicoes();
+}
+
+function simularReconhecimentoDaPalavra(palavra) {
+  if (!palavraEhValida(palavra)) {
+    mostrarMensagem(`❌ Palavra '${palavra}' inválida. Use apenas letras minúsculas (a-z).`, 'erro');
+    return;
+  }
+
+  if (listaDePalavras.length === 0) {
+    mostrarMensagem(`⚠️ Adicione palavras ao dicionário antes de consultar.`, 'aviso');
+    return;
+  }
+
+  let estadoAtual = 'q0';
+  const tabelaDeTransicoes = document.getElementById('matrixBody');
+  const linhasDaTabela = [...tabelaDeTransicoes.querySelectorAll('tr')];
+
+  mostrarMensagem(`🔍 Simulando reconhecimento de '${palavra}'...`, 'info');
+
+  let indiceDaLetra = 0;
+
+  const intervaloDeAnimacao = setInterval(() => {
+    if (indiceDaLetra >= palavra.length) {
+      clearInterval(intervaloDeAnimacao);
+      removerDestaquesDaTabela(linhasDaTabela);
+
+      if (matrizDeTransicao[estadoAtual] && matrizDeTransicao[estadoAtual]['fim'] === 'qf') {
+        mostrarMensagem(`✅ Palavra '${palavra}' foi reconhecida! Está no dicionário.`, 'sucesso');
       } else {
-        output(`❌ Palavra '${word}' não foi reconhecida. Não está no dicionário.`);
+        mostrarMensagem(`❌ Palavra '${palavra}' não foi reconhecida. Não está no dicionário.`, 'erro');
       }
       return;
     }
-    
-    const symbol = word[index];
-    const next = matrix[current] && matrix[current][symbol];
-    
-    // Remove highlight anterior
-    rows.forEach(r => r.classList.remove('highlight'));
-    
-    // Adiciona highlight na transição atual
-    const highlight = rows.find(r => 
-      r.cells[0].textContent === current && 
-      r.cells[1].textContent === symbol
-    );
-    
-    if(highlight){
-      highlight.classList.add('highlight');
+
+    const letraAtual = palavra[indiceDaLetra];
+    const proximoEstado = matrizDeTransicao[estadoAtual] && matrizDeTransicao[estadoAtual][letraAtual];
+
+    removerDestaquesDaTabela(linhasDaTabela);
+
+    const linhaParaDestacar = encontrarLinhaDeTransicao(linhasDaTabela, estadoAtual, letraAtual);
+
+    if (linhaParaDestacar) {
+      linhaParaDestacar.classList.add('highlight');
     }
-    
-    if(!next){
-      clearInterval(interval);
-      rows.forEach(r => r.classList.remove('highlight'));
-      output(`❌ Palavra '${word}' NÃO RECONHECIDA. Transição inválida no símbolo '${symbol}'.`);
+
+    if (!proximoEstado) {
+      clearInterval(intervaloDeAnimacao);
+      removerDestaquesDaTabela(linhasDaTabela);
+      mostrarMensagem(`❌ Palavra '${palavra}' NÃO RECONHECIDA. Transição inválida no símbolo '${letraAtual}'.`, 'erro');
       return;
     }
-    
-    current = next;
-    index++;
-  }, 500);
+
+    estadoAtual = proximoEstado;
+    indiceDaLetra++;
+
+  }, TEMPO_ANIMACAO);
 }
 
-// Event Listeners
-document.getElementById('addBtn').addEventListener('click', () => {
-  const word = document.getElementById('wordInput').value.trim().toLowerCase();
-  if(word){
-    addWordToDictionary(word);
-    document.getElementById('wordInput').value = '';
-  } else {
-    output('⚠️ Digite uma palavra para adicionar.');
-  }
-});
+function encontrarLinhaDeTransicao(linhas, estado, simbolo) {
+  return linhas.find(linha => 
+    linha.cells[0].textContent === estado && 
+    linha.cells[1].textContent === simbolo
+  );
+}
 
-document.getElementById('checkBtn').addEventListener('click', () => {
-  const word = document.getElementById('checkInput').value.trim().toLowerCase();
-  if(word){
-    simulate(word);
-    document.getElementById('checkInput').value = '';
-  } else {
-    output('⚠️ Digite uma palavra para consultar.');
-  }
-});
+function removerDestaquesDaTabela(linhas) {
+  linhas.forEach(linha => linha.classList.remove('highlight'));
+}
 
-// Permite adicionar palavra pressionando Enter
-document.getElementById('wordInput').addEventListener('keypress', (e) => {
-  if(e.key === 'Enter'){
-    document.getElementById('addBtn').click();
-  }
-});
+function atualizarTabelaDeTransicoes() {
+  const corpoTabela = document.getElementById('matrixBody');
+  corpoTabela.innerHTML = '';
 
-document.getElementById('checkInput').addEventListener('keypress', (e) => {
-  if(e.key === 'Enter'){
-    document.getElementById('checkBtn').click();
+  for (const estado in matrizDeTransicao) {
+    for (const simbolo in matrizDeTransicao[estado]) {
+      const novaLinha = document.createElement('tr');
+      const estadoDestino = matrizDeTransicao[estado][simbolo];
+      
+      novaLinha.innerHTML = `
+        <td>${estado}</td>
+        <td>${simbolo}</td>
+        <td>${estadoDestino}</td>
+      `;
+      
+      corpoTabela.appendChild(novaLinha);
+    }
   }
-});
+}
 
-// Inicializa a interface
-output('👋 Bem-vindo! Adicione palavras ao dicionário para começar.');
+function atualizarListaDePalavras() {
+  const elementoLista = document.getElementById('wordList');
+  elementoLista.innerHTML = '';
+
+  if (listaDePalavras.length === 0) {
+    elementoLista.innerHTML = `
+      <li style="text-align:center; color:#999;">
+        Nenhuma palavra adicionada
+      </li>
+    `;
+    return;
+  }
+
+  listaDePalavras.forEach((palavra, indice) => {
+    const itemDaLista = document.createElement('li');
+    itemDaLista.innerHTML = `
+      <span style="color: black;">
+        <strong>${indice + 1}.</strong> ${palavra}
+      </span>
+      <button onclick="removerPalavraDoDicionario('${palavra}')" class="remove-btn">
+        Remover
+      </button>
+    `;
+    elementoLista.appendChild(itemDaLista);
+  });
+}
+
+function mostrarMensagem(mensagem, tipo) {
+  const elementoSaida = document.getElementById('output');
+  elementoSaida.textContent = mensagem;
+  elementoSaida.style.padding = '15px';
+  elementoSaida.style.marginTop = '20px';
+  elementoSaida.style.borderRadius = '4px';
+
+  const estilosPorTipo = {
+    sucesso: {
+      background: '#d4edda',
+      color: '#155724',
+      border: '1px solid #c3e6cb'
+    },
+    erro: {
+      background: '#f8d7da',
+      color: '#721c24',
+      border: '1px solid #f5c6cb'
+    },
+    aviso: {
+      background: '#fff3cd',
+      color: '#856404',
+      border: '1px solid #ffeaa7'
+    },
+    info: {
+      background: '#d1ecf1',
+      color: '#0c5460',
+      border: '1px solid #bee5eb'
+    }
+  };
+
+  let tipoIdentificado = tipo;
+  if (!tipo) {
+    if (mensagem.includes('✅')) tipoIdentificado = 'sucesso';
+    else if (mensagem.includes('❌')) tipoIdentificado = 'erro';
+    else if (mensagem.includes('⚠️')) tipoIdentificado = 'aviso';
+    else tipoIdentificado = 'info';
+  }
+
+  const estilo = estilosPorTipo[tipoIdentificado];
+  Object.assign(elementoSaida.style, estilo);
+}
+
+function configurarEventosDaInterface() {
+  document.getElementById('addBtn').addEventListener('click', () => {
+    const campoPalavra = document.getElementById('wordInput');
+    const palavra = campoPalavra.value.trim().toLowerCase();
+
+    if (palavra) {
+      adicionarPalavraAoDicionario(palavra);
+      campoPalavra.value = '';
+    } else {
+      mostrarMensagem('⚠️ Digite uma palavra para adicionar.', 'aviso');
+    }
+  });
+
+  document.getElementById('checkBtn').addEventListener('click', () => {
+    const campoConsulta = document.getElementById('checkInput');
+    const palavra = campoConsulta.value.trim().toLowerCase();
+
+    if (palavra) {
+      simularReconhecimentoDaPalavra(palavra);
+      campoConsulta.value = '';
+    } else {
+      mostrarMensagem('⚠️ Digite uma palavra para consultar.', 'aviso');
+    }
+  });
+
+  document.getElementById('wordInput').addEventListener('keypress', (evento) => {
+    if (evento.key === 'Enter') {
+      document.getElementById('addBtn').click();
+    }
+  });
+
+  document.getElementById('checkInput').addEventListener('keypress', (evento) => {
+    if (evento.key === 'Enter') {
+      document.getElementById('checkBtn').click();
+    }
+  });
+}
+
+function inicializarSistema() {
+  configurarEventosDaInterface();
+  mostrarMensagem('👋 Bem-vindo! Adicione palavras ao dicionário para começar.', 'info');
+}
+
+inicializarSistema();
