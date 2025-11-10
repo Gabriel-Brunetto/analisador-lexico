@@ -46,6 +46,8 @@ Projeto desenvolvido para fins **educacionais**, com o objetivo de demonstrar a 
 
 ---
 
+Pode ser acessado pelo link: https://analisadorlexicourierechim.netlify.app/
+
 ## Licença
 
 Este projeto é de uso **livre e educacional**.  
